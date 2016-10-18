@@ -25,23 +25,18 @@ ipc.on('window-ready', (event, path) => {
   cells.setExpressions([''])
   
   const reloadImports = () => {
-    // make search path local to the file
-    let makeAbsoluteSearchPaths = (paths) => {
-      const base = libpath.dirname(window.getRepresentedFilename())
-      let   xs   = paths.split(':')
-      for (let i=0; i < xs.length; i++) {
-        xs[i] = base + libpath.sep + xs[i]
-      }
-      return xs.join(':')
-    }
+    const cwd            = libpath.dirname(window.getRepresentedFilename())
+    const mkAbsolutePath = (path) => { return path ? cwd + libpath.sep + path : '' }
     
     // tell interpreter to load imports
     $('#status').empty()
     interpreter.renderer.loadImports({
-      searchPath  : makeAbsoluteSearchPaths($('#searchPath').val()),
+      cwd         : cwd,
+      searchPath  : $('#searchPath').val().split(':').map(mkAbsolutePath).join(':'),
       packageTool : $('#packageTool').val(),
       packagePath : $('#packagePath').val(),
-      imports     : cmImports.getDoc().getValue().split('\n'),
+      imports     : cmImportModules.getDoc().getValue().split('\n'),
+      files       : cmLoadFiles.getDoc().getValue().split('\n').map(mkAbsolutePath),
     }, (result) => {
       if (result.status === 'ok') {
         $('#status').text('Imports loaded ok.')
@@ -51,11 +46,14 @@ ipc.on('window-ready', (event, path) => {
     })
   }
   
+  const fromMaybe = (def,x) => { return x ? x : def }
+
   const loadFile = (path) => {
     // FIXME: Better error reporting when loading from a file fails
     const data = fs.readFileSync(path, 'utf8')
     const json = JSON.parse(data)
-    cmImports.getDoc().setValue(json.imports)
+    cmImportModules.getDoc().setValue(fromMaybe('', json.importModules))
+    cmLoadFiles.getDoc().setValue(fromMaybe('', json.loadFiles))
     $("#searchPath").val(json.settings.searchPath)
     $("#packagePath").val(json.settings.packagePath)
     $("#packageTool").val(json.settings.packageTool)
@@ -65,18 +63,44 @@ ipc.on('window-ready', (event, path) => {
   if (path) { loadFile(path) }
   reloadImports()
   
+
+  /* NOTE [SemanticVersioning]
+
+  When it comes to semantic versioning, the conventions between Haskell and npm differ.
+    Haskell: major.major.minor.patch  e.g. 0.1.0.0
+    npm    : major.minor.patch        e.g.   1.0.0
+  The Haskell scheme was chosen to allow a major versions starting with 0, e.g. `0.7`
+  and the first "solid" release being e.g. `1.0`.
+  It appears that many projects built with packages on npm, e.g. Electron itself,
+  do not follow semantics versioning precisely whenever the major version is 0.
+  There is even a special case in the specification for that:
+
+  " 4. Major version zero (0.y.z) is for initial development.
+    Anything may change at any time. The public API should not be considered stable. "
+
+  Oh well...
+
+  Whenever possible, we use the Haskell semantic versioning scheme.
+  If we have to align with the npm scheme, we translate Haskell semvers into npm semvers
+  by using hundreds for the first major version number, that is
+
+    A.B.C.D --> 100*A+B.C.D
+    0.3.0.1 -->       3.0.1
+    1.2.0.4 -->     102.0.4
+  */
   ipc.on('save-file', (event, path) => {
     const json = {
-      version  : '0.1',
-      cells    : cells.getExpressions(),
-      imports  : cmImports.getDoc().getValue(),
-      settings : {
+      version        : '0.1.0.0',
+      cells          : cells.getExpressions(),
+      importModules  : cmImportModules.getDoc().getValue(),
+      loadFiles      : cmLoadFiles.getDoc().getValue(),
+      settings       : {
         packageTool : $('#packageTool').val(),
         packagePath : $('#packagePath').val(),
         searchPath  : $('#searchPath').val(),
       },
     }
-    fs.writeFileSync(path, JSON.stringify(json), 'utf8')
+    fs.writeFileSync(path, JSON.stringify(json,null,2), 'utf8')
   })
 
   // FIXME: Call  setDocumentEdited()  also when settings are changed

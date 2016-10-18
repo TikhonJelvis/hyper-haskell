@@ -1,8 +1,11 @@
 *.DS_Store
 .cabal-sandbox/
 cabal.sandbox.config
+dist/
 .stack-work
 /.dist-buildwrapper
 /.project
 /.externalToolBuilders
 *.sublime-workspace
+node_modules
+/build

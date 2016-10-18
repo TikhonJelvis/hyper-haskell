@@ -1,6 +1,7 @@
 {-----------------------------------------------------------------------------
     HyperHaskell
 ------------------------------------------------------------------------------}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTSyntax, ExistentialQuantification, RankNTypes, ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
@@ -96,7 +97,7 @@ eval         :: Hint -> String     -> IO (Result Graphic)
 setImports   hint = run hint . Hint.setImports
                   . (++ ["Prelude", "Hyper"]) . filter (not . null)
 
-loadFiles    hint = run hint . Hint.loadModules
+loadFiles    hint = run hint . Hint.loadModules . filter (not . null)
 
 eval         hint expr = run hint $ do
     -- NOTE: We wrap results into an implicit call to Hyper.display
@@ -125,6 +126,12 @@ toInterpreterError :: SomeException -> InterpreterError
 toInterpreterError e = case fromException e of
     Just e  -> e
     Nothing -> UnknownError (displayException e)
+
+#if MIN_VERSION_base(4,8,0)
+#else
+displayException :: SomeException -> String
+displayException = show
+#endif
 
 -- | Haskell Interpreter.
 data Hint = Hint

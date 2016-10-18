@@ -4,7 +4,8 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 
     <link rel="stylesheet" href="lib/FiraCode_1.203/fira_code.css">
-    <link rel="stylesheet" href="worksheet.css" type="text/css" media="screen" charset="utf-8">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="worksheet.css">
 
     <link rel="stylesheet" href="lib/codemirror-5.6.css">
     <script type="text/javascript" src="lib/codemirror-hs-5.6.js"></script>
@@ -13,15 +14,18 @@
     <script type="text/javascript" src="src/glitter.js"></script>
 </head>
 <body>
-<div id="wrapper">
+<div class="window">
   <h1 class="closed">Settings</h1>
   <div class="section" style="display:none;">
     <form>
+      <p>Paths are relative to the current working directory,
+         which is the directory that this worksheet is saved at
+        (or the user's home directory if not yet saved).
       <p>
         <label for="packagePath">Interpreter Back-end:</label>
         <select id="packageTool" size="1">
           <option value="cabal">cabal — (default paths) </option>
-          <option value="stack">stack — stack.yml</option>
+          <option value="stack">stack — stack.yaml</option>
         </select>
         <input id="packagePath" type="text" value="">
       <p>
@@ -32,8 +36,14 @@
   
   <h1>Imports</h1>
   <div class="section">
+    <p>
+      <label>Source files to load</label>
+    <p id="p-files">
+      <script>var cmLoadFiles = CodeMirror(document.getElementById("p-files"));</script>
+    <p>
+      <label>Module imports</label>
     <p id="p-imports">
-      <script>var cmImports = CodeMirror(document.getElementById("p-imports"));</script>      
+      <script>var cmImportModules = CodeMirror(document.getElementById("p-imports"));</script>
     <p>
       Status: <span id="status">&nbsp;</span>
   </div>

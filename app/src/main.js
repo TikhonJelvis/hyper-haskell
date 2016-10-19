@@ -46,6 +46,8 @@ app.on('ready', () => {
      if (!err) { newWorksheet(pathsToOpen[i]) }
     })
   }
+  // always open a window on startup
+  if (pathsToOpen.length === 0) { newWorksheet() }
 })
 
 // The `app` object may receive an 'open-file' event *before* the 'ready' event.
@@ -53,6 +55,7 @@ app.on('ready', () => {
 let pathsToOpen = []
 // load an example worksheet right away on startup
 if (TESTING) { pathsToOpen.push(appdir + '/../worksheets/Test.hhs') }
+
 let addPathToOpen = (event, path) => {
   event.preventDefault()
   pathsToOpen.push(path)
@@ -171,8 +174,14 @@ let menuOpen = (item, focusedWindow) => {
 // NOTE: If we add new methods to an object with the help of `prototype`,
 //       we have to use `function` in order to bind `this` to the correct value.
 BrowserWindow.prototype.setFilepath = function (path) {
+  app.addRecentDocument(path)
+  if (!this._filepath) { this._filepath = path }
   this.setRepresentedFilename(path)
   this.setTitle(require('path').basename(path))
+}
+
+BrowserWindow.prototype.getFilePath = function () {
+  return this._filepath ? this._filepath : null;
 }
 
 BrowserWindow.prototype.saveFile = function () {

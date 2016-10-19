@@ -27,23 +27,18 @@ stdenv.mkDerivation rec {
   };
   server = pkgs.haskellPackages.callPackage serverProject { inherit hyper; };
 
-  electronCommand = if stdenv.isDarwin
-    then "${electron.out}/Applications/Electron.app/Contents/MacOs/Electron"
-    else "${electron.out}/bin/electron";
+  electronCommand = "${electron.out}/bin/electron";
 
   inherit src;
 
-  hyperApp = stdenv.mkDerivation ({
-    name = "hyperApp";
-    inherit src;
+  hyperCommand = ./hyper-command.sh;
 
-    buildCommand = ''
-    cp -r $src/app $out;
-    '';
-  });
-
-  buildInputs = [electron ghc cabal-install];
   buildCommand = ''
-  echo $electronCommand $hyperApp > $out
+    mkdir -p $out/bin
+    mkdir -p $out/hyper-app
+    cp -r $src/app $out/hyper-app
+    chmod +x ${hyperCommand}
+    cp -p ${hyperCommand} $out/bin/hyper
+    substituteInPlace $out/bin/hyper --replace "@electron@" '${electronCommand}' --replace "@out@" $out
   '';
 }

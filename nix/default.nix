@@ -5,12 +5,22 @@ let
   src = builtins.filterSource (path: type:
     (toString path) != (toString ../.git)
   ) ../.;
+
+  haskellBuild = { stdenv, cabal2nix, name, dir }:
+    stdenv.mkDerivation ({
+      name = "${name}-default.nix";
+
+      buildCommand = ''
+      ${cabal2nix}/bin/cabal2nix file://${dir} > $out
+      '';
+    });
+
 in
   stdenv.mkDerivation rec {
     name = "Hyper-Haskell-${version}";
 
     # hyper
-    hyperProject = import ./haskell.nix {
+    hyperProject = haskellBuild {
       inherit stdenv cabal2nix;
       name = "hyper";
       dir = ../haskell/hyper;
@@ -18,7 +28,7 @@ in
     hyper = haskellPackages.callPackage hyperProject {};
 
     # hyper-extra
-    extraProject = import ./haskell.nix {
+    extraProject = haskellBuild {
       inherit stdenv cabal2nix;
       name = "hyper-extra";
       dir = ../haskell/hyper-extra;
@@ -26,7 +36,7 @@ in
     extra = haskellPackages.callPackage extraProject { inherit hyper; };
 
     # hyper-haskell-server
-    serverProject = import ./haskell.nix {
+    serverProject = haskellBuild {
       inherit stdenv cabal2nix;
       name = "hyper-haskell-server";
       dir = ../haskell/hyper-haskell-server;

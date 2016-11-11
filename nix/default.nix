@@ -23,7 +23,7 @@ in
     hyperProject = haskellBuild {
       inherit stdenv cabal2nix;
       name = "hyper";
-      dir = ./haskell/hyper;
+      dir = ../haskell/hyper;
     };
     hyper = haskellPackages.callPackage hyperProject {};
 
@@ -31,7 +31,7 @@ in
     extraProject = haskellBuild {
       inherit stdenv cabal2nix;
       name = "hyper-extra";
-      dir = ./haskell/hyper-extra;
+      dir = ../haskell/hyper-extra;
     };
     extra = haskellPackages.callPackage extraProject { inherit hyper; };
 
@@ -39,7 +39,7 @@ in
     serverProject = haskellBuild {
       inherit stdenv cabal2nix;
       name = "hyper-haskell-server";
-      dir = ./haskell/hyper-haskell-server;
+      dir = ../haskell/hyper-haskell-server;
     };
     server = haskellPackages.callPackage serverProject { inherit hyper; };
 

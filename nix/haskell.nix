@@ -1,9 +1,6 @@
-{ stdenv, pkgs, name, dir }:
+{ stdenv, cabal2nix, name, dir }:
 
-let
-  cabal2nix = pkgs.haskellPackages.cabal2nix;
-in
-  pkgs.stdenv.mkDerivation ({
+  stdenv.mkDerivation ({
     name = "${name}-default.nix";
 
     buildCommand = ''
